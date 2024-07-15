@@ -1,0 +1,49 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #faf8ef;
+    margin: 0;
+}
+
+#game-container {
+    text-align: center;
+}
+
+#score {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+#game-board {
+    display: grid;
+    grid-template-columns: repeat(4, 100px);
+    grid-template-rows: repeat(4, 100px);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.game-cell {
+    width: 100px;
+    height: 100px;
+    background-color: #cdc1b4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.value-2 { background-color: #eee4da; color: #776e65; }
+.value-4 { background-color: #ede0c8; color: #776e65; }
+.value-8 { background-color: #f2b179; color: #f9f6f2; }
+.value-16 { background-color: #f59563; color: #f9f6f2; }
+.value-32 { background-color: #f67c5f; color: #f9f6f2; }
+.value-64 { background-color: #f65e3b; color: #f9f6f2; }
+.value-128 { background-color: #edcf72; color: #f9f6f2; }
+.value-256 { background-color: #edcc61; color: #f9f6f2; }
+.value-512 { background-color: #edc850; color: #f9f6f2; }
+.value-1024 { background-color: #edc53f; color: #f9f6f2; }
+.value-2048 { background-color: #edc22e; color: #f9f6f2; }
