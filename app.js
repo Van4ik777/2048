@@ -10,7 +10,7 @@ function findEmptyRows() {
     let emptyRows = [];
     for (let row = 0; row < 4; row++) {
         for (let i = 0; i < 4; i++) {
-            if (board[row][i] == 0) {
+            if (board[row][i] === 0) {
                 emptyRows.push([row, i]);
             }
         }
@@ -56,38 +56,66 @@ function fillBoardWithRandomItem(board, item) {
     }
 }
 
+function animateMove(row, oldRow, newRow, direction) {
+
+}
+
 function swapRight(board) {
+    let moved = false;
     for (let row = 0; row < 4; row++) {
+        let newRow = [];
         let boardRow = board[row].filter(cell => cell !== 0);
-        const newRow = [];
-        for (let i = 0; i < boardRow.length; i++) {
-            if (boardRow[i] === boardRow[i + 1]) {
+        for (let i = boardRow.length - 1; i >= 0; i--) {
+            if (boardRow[i] === boardRow[i - 1]) {
                 const mergedValue = boardRow[i] * 2;
                 countScore += mergedValue;
-                newRow.push(mergedValue);
-                i++;
+                newRow.unshift(mergedValue);
+                boardRow[i - 1] = 0;
+                moved = true;
+                // Добавление класса для объединения
+                let cell = document.getElementById(`cell-${row}-${i}`);
+                if (cell) {
+                    cell.classList.add('merge');
+                    cell.addEventListener('animationend', () => {
+                        cell.classList.remove('merge');
+                    }, { once: true });
+                }
             } else {
-                newRow.push(boardRow[i]);
+                newRow.unshift(boardRow[i]);
             }
         }
         while (newRow.length < 4) {
             newRow.unshift(0);
         }
-        board[row] = newRow;
+        if (JSON.stringify(board[row]) !== JSON.stringify(newRow)) {
+            animateMove(row, board[row], newRow, 'right');
+            board[row] = newRow;
+            moved = true;
+        }
     }
-    return board;
+    return moved;
 }
 
 function swapLeft(board) {
+    let moved = false;
     for (let row = 0; row < 4; row++) {
+        let newRow = [];
         let boardRow = board[row].filter(cell => cell !== 0);
-        const newRow = [];
         for (let i = 0; i < boardRow.length; i++) {
             if (boardRow[i] === boardRow[i + 1]) {
                 const mergedValue = boardRow[i] * 2;
                 countScore += mergedValue;
                 newRow.push(mergedValue);
-                i++;
+                boardRow[i + 1] = 0;
+                moved = true;
+                // Добавление класса для объединения
+                let cell = document.getElementById(`cell-${row}-${i}`);
+                if (cell) {
+                    cell.classList.add('merge');
+                    cell.addEventListener('animationend', () => {
+                        cell.classList.remove('merge');
+                    }, { once: true });
+                }
             } else {
                 newRow.push(boardRow[i]);
             }
@@ -95,9 +123,33 @@ function swapLeft(board) {
         while (newRow.length < 4) {
             newRow.push(0);
         }
-        board[row] = newRow;
+        if (JSON.stringify(board[row]) !== JSON.stringify(newRow)) {
+            animateMove(row, board[row], newRow, 'left');
+            board[row] = newRow;
+            moved = true;
+        }
     }
-    return board;
+    return moved;
+}
+
+function swapUp() {
+    let transposedBoard = transposeBoard(board);
+    let newBoard = transposedBoard.map(col => slideUp(col));
+    board = transposeBoard(newBoard);
+    newBoard.forEach((col, i) => {
+        animateColumn(i, transposedBoard[i], col, 'up');
+    });
+    return newBoard.some((col, i) => !col.every((cell, j) => cell === board[j][i]));
+}
+
+function swapDown() {
+    let transposedBoard = transposeBoard(board);
+    let newBoard = transposedBoard.map(col => slideDown(col));
+    board = transposeBoard(newBoard);
+    newBoard.forEach((col, i) => {
+        animateColumn(i, transposedBoard[i], col, 'down');
+    });
+    return newBoard.some((col, i) => !col.every((cell, j) => cell === board[j][i]));
 }
 
 function transposeBoard(board) {
@@ -114,14 +166,16 @@ function transposeBoard(board) {
 
 function swapDown() {
     let transposedBoard = transposeBoard(board);
-    transposedBoard = swapRight(transposedBoard);
-    return transposeBoard(transposedBoard);
+    let moved = swapRight(transposedBoard);
+    board = transposeBoard(transposedBoard);
+    return moved;
 }
 
 function swapUp() {
     let transposedBoard = transposeBoard(board);
-    transposedBoard = swapLeft(transposedBoard);
-    return transposeBoard(transposedBoard);
+    let moved = swapLeft(transposedBoard);
+    board = transposeBoard(transposedBoard);
+    return moved;
 }
 
 function checkGameOver(board) {
@@ -142,48 +196,74 @@ function checkGameOver(board) {
 }
 
 function initializeGame() {
+    board = [
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+    ];
+    countScore = 0;
     let emptyRows = findEmptyRows();
     let randomItems = get2RandomItems(emptyRows, 2);
     fillBoardWithRandomItems(board, randomItems);
     renderBoard();
+    hideGameOverScreen();
 }
 
 function renderBoard() {
+    const gameBoard = document.getElementById('game-board');
+    gameBoard.innerHTML = '';
+
     for (let row = 0; row < 4; row++) {
         for (let col = 0; col < 4; col++) {
-            let cell = document.getElementById(`cell-${row}-${col}`);
-            cell.textContent = board[row][col] === 0 ? '' : board[row][col];
+            let cell = document.createElement('div');
+            cell.id = `cell-${row}-${col}`;
             cell.className = `game-cell value-${board[row][col]}`;
+            cell.textContent = board[row][col] === 0 ? '' : board[row][col];
+            gameBoard.appendChild(cell);
         }
     }
+
     document.getElementById('score').textContent = `Score: ${countScore}`;
 }
 
 function makeMove(direction) {
-    let oldBoard = JSON.stringify(board);
+    let moved = false;
     switch (direction) {
         case 'left':
-            board = swapLeft(board);
+            moved = swapLeft(board);
             break;
         case 'right':
-            board = swapRight(board);
+            moved = swapRight(board);
             break;
         case 'up':
-            board = swapUp();
+            moved = swapUp();
             break;
         case 'down':
-            board = swapDown();
+            moved = swapDown();
             break;
     }
-    if (oldBoard !== JSON.stringify(board)) {
+    if (moved) {
         let emptyRows = findEmptyRows();
         let randomItem = getRandomItem(emptyRows);
         fillBoardWithRandomItem(board, randomItem);
+
+        // Добавление тайм-аута перед рендерингом
+        setTimeout(() => {
+            renderBoard();
+            if (checkGameOver(board)) {
+                showGameOverScreen();
+            }
+        }, 300); // Таймаут в 300 мс
     }
-    renderBoard();
-    if (checkGameOver(board)) {
-        alert("Game Over!");
-    }
+}
+
+function showGameOverScreen() {
+    document.querySelector('.game-over').style.display = 'flex';
+}
+
+function hideGameOverScreen() {
+    document.querySelector('.game-over').style.display = 'none';
 }
 
 document.addEventListener('keydown', (event) => {
@@ -204,13 +284,10 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.getElementById('restart-button').addEventListener('click', () => {
-    board = [
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0]
-    ];
-    countScore = 0;
+    initializeGame();
+});
+
+document.querySelector('.game-over').addEventListener('click', () => {
     initializeGame();
 });
 
