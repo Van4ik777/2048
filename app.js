@@ -110,7 +110,6 @@ function swapLeft(board) {
     return moved;
 }
 
-
 function transposeBoard(board) {
     const newBoard = [];
     for (let row = 0; row < 4; row++) {
@@ -234,3 +233,39 @@ document.getElementById('restart-button').addEventListener('click', () => {
 });
 
 initializeGame();
+
+// Поддержка свайпов для мобильных устройств
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+document.addEventListener('touchstart', (event) => {
+    touchStartX = event.changedTouches[0].screenX;
+    touchStartY = event.changedTouches[0].screenY;
+});
+
+document.addEventListener('touchend', (event) => {
+    touchEndX = event.changedTouches[0].screenX;
+    touchEndY = event.changedTouches[0].screenY;
+    handleSwipe();
+});
+
+function handleSwipe() {
+    let deltaX = touchEndX - touchStartX;
+    let deltaY = touchEndY - touchStartY;
+
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        if (deltaX > 0) {
+            makeMove('right'); // Свайп вправо
+        } else {
+            makeMove('left');  // Свайп влево
+        }
+    } else {
+        if (deltaY > 0) {
+            makeMove('down');  // Свайп вниз
+        } else {
+            makeMove('up');    // Свайп вверх
+        }
+    }
+}
